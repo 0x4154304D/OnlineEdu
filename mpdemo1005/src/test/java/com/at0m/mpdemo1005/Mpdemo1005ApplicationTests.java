@@ -3,6 +3,7 @@ package com.at0m.mpdemo1005;
 import com.at0m.mpdemo1005.bean.User;
 import com.at0m.mpdemo1005.mapper.UserMapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @SpringBootTest
 public class Mpdemo1005ApplicationTests {
@@ -29,15 +31,15 @@ public class Mpdemo1005ApplicationTests {
     @Test
     public void addUser(){
         User user = new User();
-        user.setName("赢政");
-        user.setAge(34);
-        user.setEmail("yingzheng@126.com");
+        user.setName("狄仁杰");
+        user.setAge(27);
+        user.setEmail("direnjie@gmail.com");
 
 //        user.setCreateTime(new Date());
 //        user.setUpdateTime(new Date());
 
         int insert = userMapper.insert(user);
-        System.out.println("insert" + insert);
+        System.out.println("insert " + insert);
     }
 
     //修改操作
@@ -45,8 +47,8 @@ public class Mpdemo1005ApplicationTests {
     public void updateUser(){
         User user = new User();
 
-        user.setId(2L);
-        user.setAge(120);
+        user.setId(3L);
+        user.setAge(52);
 
         int row = userMapper.updateById(user);
         System.out.println(row);
@@ -57,18 +59,34 @@ public class Mpdemo1005ApplicationTests {
     public void testOptimisticLocker(){
 
 //        根据id查询数据
-        User user = userMapper.selectById(1313284430378360834L);
+        User user = userMapper.selectById(1313116452613533698L);
 //        进行修改
-        user.setAge(250);
+        user.setName("夏洛特");
 
         userMapper.updateById(user);
     }
 
+//    测试乐观锁失败
+    @Test
+    public void testOptimisticLockerFall(){
+        User user = userMapper.selectById(1313111891035361282L);
+        user.setName("赵云");
+        user.setVersion(user.getVersion() - 1);
+
+        userMapper.updateById(user);
+    }
+
+//    单个id的查询
+    @Test
+    public void testSelectDemo(){
+        User user = userMapper.selectById(1313305509511643138L);
+        System.out.println(user);
+    }
 //    多个id的批量查询
     @Test
     public void testSelectDemo1(){
-        List<User> users = userMapper.selectBatchIds(Arrays.asList(1L, 2L, 3L));
-        System.out.println(users);
+        List<User> users = userMapper.selectBatchIds(Arrays.asList(3L, 4L, 5L));
+        users.forEach(System.out::println);
     }
 
 //    简单的条件查询
@@ -87,7 +105,7 @@ public class Mpdemo1005ApplicationTests {
     public void testPage(){
         //1 创建page对象
         //传入两个参数：当前页、每页记录数
-        Page<User> page = new Page<>();
+        Page<User> page = new Page<>(1,5);
 
         //调用mp中分页查询
         //调用用mp分页查询过程，底层封装
@@ -95,6 +113,24 @@ public class Mpdemo1005ApplicationTests {
         userMapper.selectPage(page, null);
 
         // 通过page对象获取分页数据
+        System.out.println(page.getCurrent());  //当前页
+        System.out.println(page.getRecords());  //每页数据list集合
+        System.out.println(page.getSize()); //每页显示记录数
+        System.out.println(page.getTotal()); //总记录数
+        System.out.println(page.getPages()); //总页数
+
+        System.out.println(page.hasNext()); //是否有下页
+        System.out.println(page.hasPrevious()); //是否又上页
+    }
+
+//    测试selectMapsPage分页：结果集是Map
+    @Test
+    public void testSelectMapsPage(){
+        Page<User> page = new Page<>(1, 5);
+        IPage<Map<String, Object>> mapIPage = userMapper.selectMapsPage(page, null);
+
+        //mapIpage 获取记录（必须），否则会有数据类型转换错误
+        mapIPage.getRecords().forEach(System.out::println);
         System.out.println(page.getCurrent());  //当前页
         System.out.println(page.getRecords());  //每页数据list集合
         System.out.println(page.getSize()); //每页显示记录数
